@@ -1,21 +1,16 @@
 #pragma once
 #include "Node.h"
+#include "Component.h"
 #include <memory>
 #include <ginac/ginac.h>
 
 using namespace GiNaC;
 
-class TwoPort
+class TwoPort : CircuitElement
 {
-	std::shared_ptr<Node> input1;
-	std::shared_ptr<Node> input2;
-	std::shared_ptr<Node> output1;
-	std::shared_ptr<Node> output2;
+	std::shared_ptr<Node> in1, in2, out1, out2;
 
-	ex voltage1;
-	ex voltage2;
-	ex current1;
-	ex current2;
+	ex v1, v2, i1, i2;
 
 public:
 	TwoPort() : input1(nullptr), output1(nullptr), input2(nullptr), output2(nullptr), voltage1(0.0), voltage2(0.0), current1(0.0), current2(0.0) {}
@@ -24,24 +19,25 @@ public:
 
     virtual ~TwoPort() = default; // Virtual destructor for polymorphism
 
-	ex getVoltage1() const { return voltage1; }
-	ex getVoltage2() const { return voltage2; }
+	ex getVoltage1() const { return v1; }
+	ex getVoltage2() const { return v2; }
 
-	ex  getCurrent1() const { return current1; }
-	ex  getCurrent2() const { return current2; }
+	ex  getCurrent1() const { return i1; }
+	ex  getCurrent2() const { return i2; }
 
-	void setVoltage1(ex volt) { voltage1 = volt; }
-	void setVoltage2(ex volt) { voltage2 = volt; }
+	void setVoltage1(ex volt) { v1 = volt; }
+	void setVoltage2(ex volt) { v2 = volt; }
 
-	void setCurrent1(ex curr) { current1 = curr; }
-	void setCurrent2(ex curr) { current2 = curr; }
+	void setCurrent1(ex curr) { i1 = curr; }
+	void setCurrent2(ex curr) { i2 = curr; }
 
-	std::shared_ptr<Node> getInA() const { return input1; }
-    std::shared_ptr<Node> getInB() const { return input2; }
-    std::shared_ptr<Node> getOutput1() const { return output1; }
-    std::shared_ptr<Node> getOutput2() const { return output2; }
+	std::shared_ptr<Node> getInA() const { return in1; }
+    std::shared_ptr<Node> getInB() const { return in2; }
+    std::shared_ptr<Node> getOutput1() const { return out1; }
+    std::shared_ptr<Node> getOutput2() const { return out2; }
 
-	virtual void stamp(GiNaC::matrix& G, GiNaC::matrix& I) const = 0;};
+	virtual GiNaC::ex getParameter() const = 0;
+};
 
 class Transformator : public TwoPort
 {				  // ratio = n2 / n1

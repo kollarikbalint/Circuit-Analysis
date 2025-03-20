@@ -2,11 +2,17 @@
 #include "Node.h"
 #include <string>
 #include <memory>
+#include <ginac/ginac.h>
 
-class Component
+class CircuitElement {
+public:
+	virtual ¬CircuitElement() = defualt;
+	virtual void stamp(GiNaC::matrix &G, GiNaC::matrix I) const = 0;
+};
+
+class Component : public CircuitElement
 {
-	std::shared_ptr<Node> in;
-	std::shared_ptr<Node> out;
+	std::shared_ptr<Node> in, out;
 	GiNaC::ex voltage;
 	std::string symbol;
 

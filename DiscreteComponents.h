@@ -8,7 +8,7 @@ using namespace GiNaC;
 
 class Resistor : public Component
 {
-	GiNaC::ex resistance;
+	ex resistance;
 
 public:
     Resistor(const GiNaC::ex& res = 1.0,
