@@ -9,14 +9,14 @@ using namespace GiNaC;
 class TwoPort : public CircuitElement
 {
 	std::shared_ptr<Node> in1, in2, out1, out2;
-
+	std::string symbol;
 	ex v1, v2, i1, i2;
 
 public:
-	TwoPort() : in1(nullptr), out1(nullptr), in2(nullptr), out2(nullptr), v1(0.0), v2(0.0), i1(0.0), i2(0.0) {}
-    TwoPort(std::shared_ptr<Node> inputA, std::shared_ptr<Node> outputA,
+	TwoPort() : symbol(""), in1(nullptr), out1(nullptr), in2(nullptr), out2(nullptr), v1(0.0), v2(0.0), i1(0.0), i2(0.0) {}
+    TwoPort(const std::string& sym, std::shared_ptr<Node> inputA, std::shared_ptr<Node> outputA,
         std::shared_ptr<Node> inputB, std::shared_ptr<Node> outputB)
-    : in1(inputA), out1(outputA), in2(inputB), out2(outputB) {}
+    : symbol(sym), in1(inputA), out1(outputA), in2(inputB), out2(outputB) {}
 
     virtual ~TwoPort() = default;
 
@@ -67,13 +67,14 @@ public:
 // A ports are the in & out connectors, B ports are the two poles of the control probe
 class ControlledSource : public TwoPort
 {
-	ex controlValue; // We need to calculate this for each crcuit on the fly
-							// Needs to be symbolical, can become convoluted depending on the circuit
+	ex gain;
 
 public:
-	ControlledSource(ex control);
-	ex getControlValue();
-	void setControlValue(ex control);
+	ControlledSource(ex control) : TwoPort(), gain(control) {}
+	ControlledSource(const std::string& sym, std::shared_ptr<Node> in, std::shared_ptr<Node> out,
+		std::shared_ptr<Node> c_in, std::shared_ptr<Node> c_out, ex control) {}
+	ex getControlValue() const { return gain; }
+	void setControlValue(ex control) { gain = control; }
 
 	virtual ex calculateControlValue();
 };
@@ -83,7 +84,11 @@ class VCVS : public ControlledSource
 	ex outputVoltage;
 
 public:
-	VCVS(ex control, ex output);
+	VCVS(ex control) : ControlledSource(control) {}
+	VCVS(const std::string& sym, std::shared_ptr<Node> in, std::shared_ptr<Node> out,
+		std::shared_ptr<Node> c_in, std::shared_ptr<Node> c_out, ex control)
+		: ControlledSource(sym, in, out, c_in, c_out, control) {};
+
 	ex getOutputVoltage();
 	void setOutputVoltage(ex voltage);
 
@@ -95,7 +100,11 @@ class CCVS : public ControlledSource
 	ex outputVoltage;
 
 public:
-	CCVS(ex control, ex output);
+	CCVS(ex control) : ControlledSource(control) {}
+	CCVS(const std::string& sym, std::shared_ptr<Node> in, std::shared_ptr<Node> out,
+		std::shared_ptr<Node> c_in, std::shared_ptr<Node> c_out, ex control)
+		: ControlledSource(sym, in, out, c_in, c_out, control) {};
+
 	ex getOutputVoltage();
 	void setOutputVoltage(ex voltage);
 
@@ -107,7 +116,11 @@ class CCCS : public ControlledSource
 	ex outputCurrent;
 
 public:
-	CCCS(ex control, ex output);
+	CCCS(ex control) : ControlledSource(control) {}
+	CCCS(const std::string& sym, std::shared_ptr<Node> in, std::shared_ptr<Node> out,
+		std::shared_ptr<Node> c_in, std::shared_ptr<Node> c_out, ex control)
+		: ControlledSource(sym, in, out, c_in, c_out, control) {};
+
 	ex getOutputCurrent();
 	void setOutputCurrent(ex current);
 
@@ -119,7 +132,11 @@ class VCCS : public ControlledSource
 	ex outputCurrent;
 
 public:
-	VCCS(ex control, ex output);
+	VCCS(ex control) : ControlledSource(control) {}
+	VCCS(const std::string& sym, std::shared_ptr<Node> in, std::shared_ptr<Node> out,
+		std::shared_ptr<Node> c_in, std::shared_ptr<Node> c_out, ex control)
+		: ControlledSource(sym, in, out, c_in, c_out, control) {};
+
 	ex getOutputCurrent();
 	void setOutputCurrent(ex current);
 
@@ -129,6 +146,12 @@ public:
 class OperationalAmplifier : public TwoPort {
 public:
 	OperationalAmplifier() {
+		setVoltage1(0.0);
+		setCurrent1(0.0);
+	}
+
+	OperationalAmplifier(const std::string& sym, std::shared_ptr<Node> inA, std::shared_ptr<Node> outA,
+		std::shared_ptr<Node> inB, std::shared_ptr<Node> outB) : TwoPort("A" + sym, inA, outA, inB, outB) {
 		setVoltage1(0.0);
 		setCurrent1(0.0);
 	}

@@ -5,3 +5,83 @@
 #include <stdexcept>
 #include <ginac/ginac.h>
 
+using namespace GiNaC;
+
+// Resistor, Table B.2
+
+void Resistor::stamp(matrix& G, matrix& I) const {
+    int i = getInput()->getIndex(), j = getOutput()->getIndex();
+
+    ex g = 1 / resistance; // Conductance
+    G(i, i) += g;
+    G(j, j) += g;
+    G(i, j) -= g;
+    G(j, i) -= g;
+}
+
+// Method to reisze symmetric matrix
+// This function resizes the matrix to the new dimensions and fills in the new elements with zeros
+
+matrix resize_matrix(const GiNaC::matrix& original, size_t new_rows, size_t new_cols) {
+    matrix resized(new_rows, new_cols);
+
+    // Copy existing elements into the new matrix
+    for (size_t i = 0; i < std::min(static_cast<size_t>(original.rows()), new_rows); ++i) {
+        for (size_t j = 0; j < std::min(static_cast<size_t>(original.cols()), new_cols); ++j) {
+            resized(i, j) = original(i, j);
+        }
+    }
+
+    return resized;
+}
+
+// Independent Voltage Source, Table B.6
+
+void VoltageSource::stamp(matrix& G, matrix& I) const {
+    int i = getInput()->getIndex(), j = getOutput()->getIndex();
+    int vs_row = G.rows(); // Add a new vairable for current flow
+
+    // Resize the matrices if necessary
+    G = resize_matrix(G, vs_row + 1, vs_row + 1);
+    I = resize_matrix(I, vs_row + 1, 1);
+
+    // V_i - V_j = voltage
+    G(vs_row, i) = 1;
+    G(vs_row, j) = -1;
+    G(i, vs_row) = 1;
+    G(j, vs_row) = -1;
+    I(vs_row, 0) = voltage; // Set the voltage source value
+}
+
+// Independent Current SourceTable B.8
+
+void CurrentSource::stamp(matrix& G, matrix& I) const {
+    int i = getInput()->getIndex(), j = getOutput()->getIndex();
+    // Directly stamp into RHS
+    I(i, 0) -= current;  // Current leaves node i
+    I(j, 0) += current;  // Current enters node j
+}
+
+// Capacitor (Laplace Domain, Table B.4)
+
+void Capacitor::stamp(matrix& G, matrix& I) const {
+    int i = getInput()->getIndex(), j = getOutput()->getIndex();
+    ex Y = GiNaC::symbol("s") * capacitance; // Conductance 1 / Z = s * C where s = j * w is the Laplace variable
+
+    G(i, i) += Y;
+    G(j, j) += Y;
+    G(i, j) -= Y;
+    G(j, i) -= Y;
+}
+
+// Inductor (Laplace Domain, Table B.4)
+
+void Inductor::stamp(matrix&G, matrix& I) const {
+    int i = getInput()->getIndex(), j = getOutput()->getIndex();
+    ex Y = 1 / (GiNaC::symbol("s") * inductance); // Conductance 1 / Z = 1 / (s * L) where s = j * w is the Laplace variable
+
+    G(i, i) += Y;
+    G(j, j) += Y;
+    G(i, j) -= Y;
+    G(j, i) -= Y;
+}

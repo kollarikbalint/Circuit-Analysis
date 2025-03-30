@@ -38,6 +38,9 @@ public:
 
 	ex getVoltage() const { return voltage; }
 	void setVoltage(ex volt) { voltage = volt; }
+
+	void stamp(matrix& G, matrix& I) const override;
+
 };
 
 class CurrentSource : public Component
@@ -51,6 +54,8 @@ public:
 		: Component("I" + sym, input, output), current(curr) {}
 	ex getCurrent() { return current; }
 	void setCurrent(ex curr) { current = curr; }
+
+	void stamp(matrix& G, matrix& I) const override;
 };
 
 
