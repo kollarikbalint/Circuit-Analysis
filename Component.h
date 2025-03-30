@@ -4,23 +4,25 @@
 #include <memory>
 #include <ginac/ginac.h>
 
+using namespace GiNaC;
+
 class CircuitElement {
 public:
-	virtual ¬CircuitElement() = defualt;
-	virtual void stamp(GiNaC::matrix &G, GiNaC::matrix I) const = 0;
+	virtual ~CircuitElement() = default;
+	virtual void stamp(matrix &G, matrix I) const = 0;
 };
 
 class Component : public CircuitElement
 {
 	std::shared_ptr<Node> in, out;
-	GiNaC::ex voltage;
+	ex voltage;
 	std::string symbol;
 
 public:
     Component(const std::string& sym = "", 
              std::shared_ptr<Node> input = nullptr,
              std::shared_ptr<Node> output = nullptr,
-             const GiNaC::ex& pot = 0.0)
+             const ex& pot = 0.0)
         : symbol(sym), in(input), out(output), voltage(pot) {}
 
 	virtual ~Component() = default; // Virtual destructor for polymorphism
@@ -35,8 +37,8 @@ public:
 	std::string getSym() const { return symbol; }
     void setSym(const std::string& sym) { symbol = sym; }
 
-	GiNaC::ex getVoltage() const { return voltage; }
-    void setVoltage(const GiNaC::ex& pot) { voltage = pot; }
+	ex getVoltage() const { return voltage; }
+    void setVoltage(const ex& pot) { voltage = pot; }
 
 	// Automatic derived smybol generation by GiNaC
     GiNaC::symbol getVoltageSymbol() const {
@@ -44,5 +46,5 @@ public:
     }
 	
 	// Matrix stamping black magic
-	virtual void stamp(GiNaC::matrix& G, GiNaC::matrix& I) const = 0;
+	virtual void stamp(matrix& G, matrix& I) const = 0;
 };

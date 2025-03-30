@@ -11,7 +11,7 @@ class Resistor : public Component
 	ex resistance;
 
 public:
-    Resistor(const GiNaC::ex& res = 1.0,
+    Resistor(const ex& res = 1.0,
             const std::string& sym = "",
             std::shared_ptr<Node> input = nullptr,
             std::shared_ptr<Node> output = nullptr)
@@ -73,7 +73,7 @@ public:
 	void setCapacitance(ex& C) { capacitance = C; }
 
 	// AC stamping for MNA
-	void stamp(GiNaC::matrix& G, GiNaC::matrix& I) const;
+	void stamp(matrix& G, matrix& I) const;
 };
 
 class Inductor : public DynamicComponent
