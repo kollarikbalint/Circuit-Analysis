@@ -6,16 +6,17 @@
 
 using namespace GiNaC;
 
+// Linear Resistor
+
 class Resistor : public Component
 {
-	ex resistance;
+	ex resistance; // Purely resistive, no impedance or imaginary part
 
 public:
-    Resistor(const ex& res = 1.0,
-            const std::string& sym = "",
-            std::shared_ptr<Node> input = nullptr,
-            std::shared_ptr<Node> output = nullptr)
-        : Component(sym, input, output, 0), resistance(res) {}
+	Resistor() : Component(), resistance(ex(0)) {}
+    Resistor(const std::string& sym, const ex& res, std::shared_ptr<Node> input = nullptr,
+		std::shared_ptr<Node> output = nullptr)
+        : Component("R" + sym, input, output), resistance(res) {}
 
 	ex getResistance() const { return resistance; }
     void setResistance(const ex& res) { resistance = res; }
@@ -23,13 +24,17 @@ public:
 	void stamp(matrix& G, matrix& I) const override;
 };
 
+// Ideal voltage source
+
 class VoltageSource : public Component
 {
 	ex voltage;
 
 public:
-	VoltageSource(ex volt, const std::string& sym = "", std::shared_ptr<Node> input = nullptr, std::shared_ptr<Node> output = nullptr)
-        : Component(sym, input, output), voltage(volt) {}
+	VoltageSource() : Component(), voltage(ex(0)) {}
+	VoltageSource(const std::string& sym, ex &volt ,std::shared_ptr<Node> input = nullptr,
+		std::shared_ptr<Node> output = nullptr)
+        : Component("V" + sym, input, output), voltage(volt) {}
 
 	ex getVoltage() const { return voltage; }
 	void setVoltage(ex volt) { voltage = volt; }
@@ -40,25 +45,33 @@ class CurrentSource : public Component
 	ex current;
 
 public:
-	CurrentSource(ex curr, const std::string sym) : Component(sym), current(curr) {}
+	CurrentSource() : Component(), current(ex(0)) {}
+	CurrentSource(const std::string& sym, ex &curr, std::shared_ptr<Node> input = nullptr,
+		std::shared_ptr<Node> output = nullptr)
+		: Component("I" + sym, input, output), current(curr) {}
 	ex getCurrent() { return current; }
 	void setCurrent(ex curr) { current = curr; }
 };
 
 
 
-// Dynamic components, for dynamic circuits and AC analysis
+// Virtual base class for dynamic components
 
 class DynamicComponent : public Component
 {
 	ex impedance; // s*L, 1/(s*C), where s = j*w
 
 public:
-	DynamicComponent(const ex imp, const std::string& sym) 
-		: Component(sym), impedance(imp) {}
+	DynamicComponent() : Component(), impedance(ex(0)) {}
+	DynamicComponent(const std::string& sym, const ex& imp, std::shared_ptr<Node> input = nullptr,
+		std::shared_ptr<Node> output = nullptr)
+		: Component(sym, input, output), impedance(imp) {}
+	~DynamicComponent() override = default;
 
 	ex getImpedance() const { return impedance; }
-	void setImpedance(ex& imp) { impedance = imp; }
+	void setImpedance(const ex& imp) { impedance = imp; }
+
+	virtual void stamp(matrix& G, matrix& I) const override;
 };
 
 class Capacitor : public DynamicComponent
@@ -66,14 +79,17 @@ class Capacitor : public DynamicComponent
 	ex capacitance;
 
 public:
-	Capacitor(const ex& imp, const ex& C, const std::string& sym)
-		: DynamicComponent(1/(GiNaC::symbol("s") * C), sym), capacitance(C) {}
+	Capacitor() : DynamicComponent(), capacitance(ex(0)) {}
+	Capacitor(const std::string& sym, const ex& C, std::shared_ptr<Node> input = nullptr,
+		std::shared_ptr<Node> output = nullptr)
+		: DynamicComponent("C" + sym, 1 / (GiNaC::symbol("s") * C), input, output),
+		capacitance(C) {}
 	
 	ex getCapacitance() { return capacitance; }
 	void setCapacitance(ex& C) { capacitance = C; }
 
 	// AC stamping for MNA
-	void stamp(matrix& G, matrix& I) const;
+	void stamp(matrix& G, matrix& I) const override;
 };
 
 class Inductor : public DynamicComponent
@@ -81,9 +97,14 @@ class Inductor : public DynamicComponent
 	ex inductance;
 
 public:
-	Inductor(const ex& L, const std::string& sym)
-        : DynamicComponent(GiNaC::symbol("s") * L, sym), inductance(L) {}
+	Inductor() : DynamicComponent(), inductance(ex(0)) {}
+	Inductor(const std::string& sym, const ex& L, std::shared_ptr<Node> input = nullptr,
+		std::shared_ptr<Node> output = nullptr)
+		: DynamicComponent("L" + sym, GiNaC::symbol("s") * L, input, output),
+		inductance(L) {}
 
 	ex getInductance() { return inductance; }
 	void setInductance(ex& ind) { inductance = ind; }
+
+	void stamp(matrix& G, matrix& I) const override;
 };
