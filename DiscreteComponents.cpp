@@ -19,7 +19,7 @@ void Resistor::stamp(matrix& G, matrix& I) const {
     G(j, i) -= g;
 }
 
-// Method to reisze symmetric matrix
+// Method to resize symbolic matrix
 // This function resizes the matrix to the new dimensions and fills in the new elements with zeros
 
 matrix resize_matrix(const GiNaC::matrix& original, size_t new_rows, size_t new_cols) {

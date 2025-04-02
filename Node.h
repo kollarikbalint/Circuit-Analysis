@@ -16,15 +16,15 @@ class Node
     static int globalIndex; // Keeping global count of nodes for indexing
 
 public:
-    // General constructor for new nodes, making sure to assign a unique index
-    Node() : potential(ex(0)), index(globalIndex++) {}
-
-    // Ground node constructor
-    // Starting point of MNA
-    static Node createGroundNode() {
-        Node groundNode;
-        groundNode.setPotential(ex(0)); // Ground node potential is always 0
-        return groundNode;
+    // Ensure each new node gets a unique index
+    Node() 
+        : potential(ex(0)) 
+    {
+        if (globalIndex == 1) { // Idx = 0 is reserved to the ground node and only one can be in existance
+            index = 0; // Actual ground
+        } else {
+            index = globalIndex++;
+        }
     }
 
     void addConnection(const std::shared_ptr<Component>& comp);
@@ -34,7 +34,12 @@ public:
     void setPotential(const ex& newPot) { potential = newPot; }
     ex getPotential() const { return potential; }
 
-    void setIndex(int idx) { index = idx; }
+    void setIndex(int idx) { 
+        if (index == 0) {
+            throw std::logic_error("Cannot modify the index of the ground node."); // Don't touch the ground
+        }
+        index = idx; 
+    }
     int getIndex() const { return index; }
 };
 

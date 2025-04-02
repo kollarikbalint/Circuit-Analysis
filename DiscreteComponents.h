@@ -3,8 +3,13 @@
 #include <complex>
 #include <stdexcept>
 #include <ginac/ginac.h>
+#include "Circuit.h"
 
 using namespace GiNaC;
+
+// Utility function used to resize symbolic matrices
+
+matrix resize_matrix(const GiNaC::matrix& original, size_t new_rows, size_t new_cols);
 
 // Linear Resistor
 
@@ -87,7 +92,7 @@ public:
 	Capacitor() : DynamicComponent(), capacitance(ex(0)) {}
 	Capacitor(const std::string& sym, const ex& C, std::shared_ptr<Node> input = nullptr,
 		std::shared_ptr<Node> output = nullptr)
-		: DynamicComponent("C" + sym, 1 / (GiNaC::symbol("s") * C), input, output),
+		: DynamicComponent("C" + sym, 1 / (s * C), input, output),
 		capacitance(C) {}
 	
 	ex getCapacitance() { return capacitance; }
@@ -105,7 +110,7 @@ public:
 	Inductor() : DynamicComponent(), inductance(ex(0)) {}
 	Inductor(const std::string& sym, const ex& L, std::shared_ptr<Node> input = nullptr,
 		std::shared_ptr<Node> output = nullptr)
-		: DynamicComponent("L" + sym, GiNaC::symbol("s") * L, input, output),
+		: DynamicComponent("L" + sym, s * L, input, output),
 		inductance(L) {}
 
 	ex getInductance() { return inductance; }

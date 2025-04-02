@@ -5,6 +5,8 @@
 #include <vector>
 #include <ginac/ginac.h>
 
+extern GiNaC::symbol s; // Laplace vairable where s = j * w
+extern GiNaC::symbol w; // Omega, angular velocity
 
 class Circuit
 {
@@ -20,6 +22,3 @@ public:
     
     void solve();
 };
-
-static GiNaC::symbol s("s");  // Laplace variable
-static GiNaC::symbol w("w");  // Angular frequency

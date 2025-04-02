@@ -8,15 +8,15 @@ using namespace GiNaC;
 
 class TwoPort : public CircuitElement
 {
-	std::shared_ptr<Node> in1, in2, out1, out2;
 	std::string symbol;
+	std::shared_ptr<Node> pri_in, sec_in, pri_out, sec_out;
 	ex v1, v2, i1, i2;
 
 public:
-	TwoPort() : symbol(""), in1(nullptr), out1(nullptr), in2(nullptr), out2(nullptr), v1(0.0), v2(0.0), i1(0.0), i2(0.0) {}
+	TwoPort() : symbol(""), pri_in(nullptr), pri_out(nullptr), sec_in(nullptr), sec_out(nullptr), v1(0.0), v2(0.0), i1(0.0), i2(0.0) {}
     TwoPort(const std::string& sym, std::shared_ptr<Node> inputA, std::shared_ptr<Node> outputA,
         std::shared_ptr<Node> inputB, std::shared_ptr<Node> outputB)
-    : symbol(sym), in1(inputA), out1(outputA), in2(inputB), out2(outputB) {}
+    : symbol(sym), pri_in(inputA), pri_out(outputA), sec_in(inputB), sec_out(outputB) {}
 
     virtual ~TwoPort() = default;
 
@@ -32,12 +32,12 @@ public:
 	virtual void setCurrent1(ex curr) { i1 = curr; }
 	virtual void setCurrent2(ex curr) { i2 = curr; }
 
-	std::shared_ptr<Node> getInA() const { return in1; }
-    std::shared_ptr<Node> getInB() const { return in2; }
-    std::shared_ptr<Node> getOutput1() const { return out1; }
-    std::shared_ptr<Node> getOutput2() const { return out2; }
+	std::shared_ptr<Node> getPrimaryInput() const { return pri_in; }
+	std::shared_ptr<Node> getSecondaryInput() const { return sec_in; }
+	std::shared_ptr<Node> getPrimaryOutput() const { return pri_out; }
+	std::shared_ptr<Node> getSecondaryOutput() const { return sec_out; }
 
-	virtual ex getParameter() const = 0;
+	virtual void stamp(matrix& G, matrix& I) const = 0;
 };
 
 class Transformer : public TwoPort
@@ -47,24 +47,36 @@ class Transformer : public TwoPort
 	ex ratio;
 
 public:
-	Transformer() : ratio(1) { }
-	Transformer(ex n) : ratio(n) { }
+	Transformer(ex n) : TwoPort(), ratio(n) {}
+	Transformer(const std::string& sym, ex n, std::shared_ptr<Node> pri_in,std::shared_ptr<Node> pri_out,
+		std::shared_ptr<Node> sec_in, std::shared_ptr<Node> sec_out) {}
+
 	ex getRatio() { return ratio; }
 	void setRatio(ex newRatio) {ratio = newRatio; }
+
+	virtual void stamp(matrix& G, matrix& I) const override;
 };
 
 class Girator : public TwoPort
 {
-	ex gyResistance; 	 // voltage2 = r * current1
-						 		 // voltage1 = -r * current2
+	// voltage2 = r * current 1
+	// voltage1 = -r * current 2
+	ex gyResistance;
+
 public:
-	Girator(ex r) : gyResistance(r) {}
+	Girator(ex r) : TwoPort(), gyResistance(r) {}
+	Girator(const std::string& sym, ex r, std::shared_ptr<Node> pri_in,std::shared_ptr<Node> pri_out,
+		std::shared_ptr<Node> sec_in, std::shared_ptr<Node> sec_out) {}
+
 	ex getResistance() { return gyResistance; }
 	void setResistance(ex r) { gyResistance = r; }
+
+	virtual void stamp(matrix& G, matrix& I) const override;
 };
 
 // Controlled sources
 // A ports are the in & out connectors, B ports are the two poles of the control probe
+
 class ControlledSource : public TwoPort
 {
 	ex gain;
@@ -77,6 +89,8 @@ public:
 	void setControlValue(ex control) { gain = control; }
 
 	virtual ex calculateControlValue();
+
+	virtual void stamp(matrix& G, matrix& I) const = 0;
 };
 
 class VCVS : public ControlledSource
@@ -87,12 +101,14 @@ public:
 	VCVS(ex control) : ControlledSource(control) {}
 	VCVS(const std::string& sym, std::shared_ptr<Node> in, std::shared_ptr<Node> out,
 		std::shared_ptr<Node> c_in, std::shared_ptr<Node> c_out, ex control)
-		: ControlledSource(sym, in, out, c_in, c_out, control) {};
+		: ControlledSource("VCVS" + sym, in, out, c_in, c_out, control) {};
 
 	ex getOutputVoltage();
 	void setOutputVoltage(ex voltage);
 
 	ex calculateControlValue() override;
+
+	void stamp(matrix& G, matrix& I) const override;
 };
 
 class CCVS : public ControlledSource
@@ -103,12 +119,14 @@ public:
 	CCVS(ex control) : ControlledSource(control) {}
 	CCVS(const std::string& sym, std::shared_ptr<Node> in, std::shared_ptr<Node> out,
 		std::shared_ptr<Node> c_in, std::shared_ptr<Node> c_out, ex control)
-		: ControlledSource(sym, in, out, c_in, c_out, control) {};
+		: ControlledSource("CCVS" + sym, in, out, c_in, c_out, control) {};
 
 	ex getOutputVoltage();
 	void setOutputVoltage(ex voltage);
 
 	ex calculateControlValue() override;
+
+	virtual void stamp(matrix& G, matrix& I) const override;
 };
 
 class CCCS : public ControlledSource
@@ -119,12 +137,14 @@ public:
 	CCCS(ex control) : ControlledSource(control) {}
 	CCCS(const std::string& sym, std::shared_ptr<Node> in, std::shared_ptr<Node> out,
 		std::shared_ptr<Node> c_in, std::shared_ptr<Node> c_out, ex control)
-		: ControlledSource(sym, in, out, c_in, c_out, control) {};
+		: ControlledSource("CCCS" + sym, in, out, c_in, c_out, control) {};
 
 	ex getOutputCurrent();
 	void setOutputCurrent(ex current);
 
 	ex calculateControlValue() override;
+	
+	virtual void stamp(matrix& G, matrix& I) const override;
 };
 
 class VCCS : public ControlledSource
@@ -135,17 +155,22 @@ public:
 	VCCS(ex control) : ControlledSource(control) {}
 	VCCS(const std::string& sym, std::shared_ptr<Node> in, std::shared_ptr<Node> out,
 		std::shared_ptr<Node> c_in, std::shared_ptr<Node> c_out, ex control)
-		: ControlledSource(sym, in, out, c_in, c_out, control) {};
+		: ControlledSource("VCCS" + sym, in, out, c_in, c_out, control) {};
 
 	ex getOutputCurrent();
 	void setOutputCurrent(ex current);
 
 	ex calculateControlValue() override;
+
+	virtual void stamp(matrix& G, matrix& I) const override;
 };
+
+// Operational Amplifier
+// U1 = I1 = 0
 
 class OperationalAmplifier : public TwoPort {
 public:
-	OperationalAmplifier() {
+	OperationalAmplifier() : TwoPort() {
 		setVoltage1(0.0);
 		setCurrent1(0.0);
 	}
@@ -158,7 +183,8 @@ public:
 
 	// We don't want anything modifying these values
 	// Override setters to do nothing
-	
 	void setVoltage1(ex volt) override {}
 	void setCurrent1(ex curr) override {}
+
+	virtual void stamp(matrix& G, matrix& I) const override;
 };
