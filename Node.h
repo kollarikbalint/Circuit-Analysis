@@ -15,15 +15,24 @@ class Node
     int index;
     static int globalIndex; // Keeping global count of nodes for indexing
 
+    static std::shared_ptr<Node> groundNode; // Singleton ground node
+
 public:
-    // Ensure each new node gets a unique index
-    Node() 
-        : potential(ex(0)) 
-    {
-        if (globalIndex == 1) { // Idx = 0 is reserved to the ground node and only one can be in existance
-            index = 0; // Actual ground
+    static std::shared_ptr<Node> getGround() {
+        if (!groundNode) {
+            groundNode = std::shared_ptr<Node>(new Node()); // Initialize ground node
+            groundNode->index = 0; // Give ground node idx 0 
+        }
+        return groundNode;
+    }
+
+    // Regular node constructor
+    Node() : potential(ex(0)) {
+        if (globalIndex == 0) {
+            index = 0; // Redundancy
+            throw std::logic_error("Use Node::getGround() to get the ground node.");
         } else {
-            index = globalIndex++;
+            index = globalIndex++; // Assign a unique index to each node
         }
     }
 
@@ -43,4 +52,7 @@ public:
     int getIndex() const { return index; }
 };
 
+// Static member initialization
+
+std::shared_ptr<Node> Node::groundNode = nullptr; // Initialize ground node to nullptr
 int Node::globalIndex = 1; // Initialize global index to 1
