@@ -7,6 +7,33 @@
 
 using namespace GiNaC;
 
+// Method to resize symbolic matrix
+// This function resizes the matrix to the new dimensions and fills in the new elements with zeros
+
+matrix resize_matrix(const GiNaC::matrix& original, size_t new_rows, size_t new_cols) {
+    // Check if we need to resize
+    if (original.rows() == new_rows && original.cols() == new_cols) {
+        return original; // No need to resize
+    }
+
+    // Initialize new matrix with desired parameters
+    matrix resized(new_rows, new_cols);
+
+    // Calculate the number of rows and cols to copy
+    size_t copy_rows = std::min(static_cast<size_t>(original.rows()), new_rows);
+    size_t copy_cols = std::min(static_cast<size_t>(original.cols()), new_cols);
+
+    // Copy
+    for (int i = 0; i < copy_rows; i++) {
+        for (int j = 0; j < copy_cols; j++) {
+            resized(i, j) = original(i, j);
+        }
+    }
+
+    return resized;
+}
+
+// https://onlinelibrary.wiley.com/doi/pdf/10.1002/9781119078388.app2
 // Resistor, Table B.2
 
 void Resistor::stamp(matrix& G, matrix& I) const {
@@ -17,22 +44,6 @@ void Resistor::stamp(matrix& G, matrix& I) const {
     G(j, j) += g;
     G(i, j) -= g;
     G(j, i) -= g;
-}
-
-// Method to resize symbolic matrix
-// This function resizes the matrix to the new dimensions and fills in the new elements with zeros
-
-matrix resize_matrix(const GiNaC::matrix& original, size_t new_rows, size_t new_cols) {
-    matrix resized(new_rows, new_cols);
-
-    // Copy existing elements into the new matrix
-    for (size_t i = 0; i < std::min(static_cast<size_t>(original.rows()), new_rows); ++i) {
-        for (size_t j = 0; j < std::min(static_cast<size_t>(original.cols()), new_cols); ++j) {
-            resized(i, j) = original(i, j);
-        }
-    }
-
-    return resized;
 }
 
 // Independent Voltage Source, Table B.6
