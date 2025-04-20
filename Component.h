@@ -10,7 +10,7 @@ class CircuitElement {
 public:
 	CircuitElement() = default;
 	virtual ~CircuitElement() = default;
-	virtual void stamp(matrix &G, matrix& I) const = 0;
+	virtual void stamp(matrix &G, matrix& I, AnalysisType analysis) const = 0;
 };
 
 class Component : public CircuitElement
@@ -31,7 +31,4 @@ public:
 
 	std::string getSym() const { return symbol; }
     void setSym(const std::string& sym) { symbol = sym; }
-	
-	// Matrix stamping function as MNA
-	virtual void stamp(matrix& G, matrix& I) const = 0;
 };

@@ -3,6 +3,9 @@
 #include <memory>
 #include <vector>
 
+std::shared_ptr<Node> Node::groundNode = nullptr; // Initialize static member
+int Node::globalIndex = 0; // Initialize static global index
+
 void Node::addConnection(const std::shared_ptr<Component>& comp) {
     connections.push_back(comp);
 }

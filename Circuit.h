@@ -5,6 +5,13 @@
 #include <vector>
 #include <ginac/ginac.h>
 
+enum class AnalysisType
+{
+    DC,
+    AC,
+    Transient
+};
+
 extern GiNaC::symbol s; // Laplace vairable where s = j * w
 extern GiNaC::symbol w; // Omega, angular velocity
 

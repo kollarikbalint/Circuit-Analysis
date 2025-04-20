@@ -33,24 +33,26 @@ matrix resize_matrix(const GiNaC::matrix& original, size_t new_rows, size_t new_
     return resized;
 }
 
-// https://onlinelibrary.wiley.com/doi/pdf/10.1002/9781119078388.app2
-// Resistor, Table B.2
+// Linear Resistor stamping
 
-void Resistor::stamp(matrix& G, matrix& I) const {
-    int i_node = getInput()->getIndex(), j_node = getOutput()->getIndex();
-    int i = (i_node == 0) ? -1 : i_node;
-    int j = (j_node == 0) ? -1 : j_node;
+void Resistor::stamp(matrix& G, matrix& I, AnalysisType analysis) const {
+    int i = getInput()->getIndex(), j = getOutput()->getIndex();
 
-    ex g = 1 / resistance; // Conductance
-    G(i, i) += g;
-    G(j, j) += g;
-    G(i, j) -= g;
-    G(j, i) -= g;
+    ex g = 1 / resistance; // Calculate conductance
+
+    // Skip stamping on ground node (idx == -1)
+    if (i != -1) G(i, i) += g; // Diagonal stamping
+    if (j != -1) G(j, j) += g;
+    if (i != -1 && j != -1) {
+        G(i, j) -= g; // Off-diagonal stamping
+        G(j, i) -= g;
+    }
 }
+
 
 // Independent Voltage Source, Table B.6
 
-void VoltageSource::stamp(matrix& G, matrix& I) const {
+void VoltageSource::stamp(matrix& G, matrix& I, AnalysisType analysis) const {
     int i = getInput()->getIndex(), j = getOutput()->getIndex();
     int vs_row = G.rows(); // Add a new vairable for current flow
 
@@ -68,16 +70,17 @@ void VoltageSource::stamp(matrix& G, matrix& I) const {
 
 // Independent Current SourceTable B.8
 
-void CurrentSource::stamp(matrix& G, matrix& I) const {
-    int i = getInput()->getIndex(), j = getOutput()->getIndex();
-    // Directly stamp into RHS
-    I(i, 0) -= current;  // Current leaves node i
-    I(j, 0) += current;  // Current enters node j
+void CurrentSource::stamp(matrix& G, matrix& I, AnalysisType analysis) const {
+    int i = getInput()->getIndex(), j = getOutput()->getIndex();  
+
+    // Skip stamping on ground node (idx == -1)
+    if (i != -1) I(i, 0) -= current;  // Current leaves node i
+    if (j != -1) I(j, 0) += current;  // Current enters node j
 }
 
 // Capacitor (Laplace Domain, Table B.4)
 
-void Capacitor::stamp(matrix& G, matrix& I) const {
+void Capacitor::stamp(matrix& G, matrix& I, AnalysisType analysis) const {
     int i = getInput()->getIndex(), j = getOutput()->getIndex();
     ex Y = GiNaC::symbol("s") * capacitance; // Conductance 1 / Z = s * C where s = j * w is the Laplace variable
 
@@ -89,7 +92,7 @@ void Capacitor::stamp(matrix& G, matrix& I) const {
 
 // Inductor (Laplace Domain, Table B.4)
 
-void Inductor::stamp(matrix&G, matrix& I) const {
+void Inductor::stamp(matrix&G, matrix& I, AnalysisType analysis) const {
     int i = getInput()->getIndex(), j = getOutput()->getIndex();
     ex Y = 1 / (GiNaC::symbol("s") * inductance); // Conductance 1 / Z = 1 / (s * L) where s = j * w is the Laplace variable
 

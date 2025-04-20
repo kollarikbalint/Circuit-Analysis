@@ -37,7 +37,7 @@ public:
 	std::shared_ptr<Node> getPrimaryOutput() const { return pri_out; }
 	std::shared_ptr<Node> getSecondaryOutput() const { return sec_out; }
 
-	virtual void stamp(matrix& G, matrix& I) const = 0;
+	virtual void stamp(matrix& G, matrix& I, AnalysisType analysis) const = 0;
 };
 
 class Transformer : public TwoPort
@@ -54,7 +54,7 @@ public:
 	ex getRatio() { return ratio; }
 	void setRatio(ex newRatio) {ratio = newRatio; }
 
-	virtual void stamp(matrix& G, matrix& I) const override;
+	virtual void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 };
 
 class Girator : public TwoPort
@@ -71,7 +71,7 @@ public:
 	ex getResistance() { return gyResistance; }
 	void setResistance(ex r) { gyResistance = r; }
 
-	virtual void stamp(matrix& G, matrix& I) const override;
+	virtual void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 };
 
 // Controlled sources
@@ -90,7 +90,7 @@ public:
 
 	virtual ex calculateControlValue();
 
-	virtual void stamp(matrix& G, matrix& I) const = 0;
+	virtual void stamp(matrix& G, matrix& I, AnalysisType analysis) const = 0;
 };
 
 class VCVS : public ControlledSource
@@ -108,7 +108,7 @@ public:
 
 	ex calculateControlValue() override;
 
-	void stamp(matrix& G, matrix& I) const override;
+	void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 };
 
 class CCVS : public ControlledSource
@@ -126,7 +126,7 @@ public:
 
 	ex calculateControlValue() override;
 
-	virtual void stamp(matrix& G, matrix& I) const override;
+	virtual void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 };
 
 class CCCS : public ControlledSource
@@ -144,7 +144,7 @@ public:
 
 	ex calculateControlValue() override;
 	
-	virtual void stamp(matrix& G, matrix& I) const override;
+	virtual void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 };
 
 class VCCS : public ControlledSource
@@ -162,7 +162,7 @@ public:
 
 	ex calculateControlValue() override;
 
-	virtual void stamp(matrix& G, matrix& I) const override;
+	virtual void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 };
 
 // Operational Amplifier
@@ -186,5 +186,5 @@ public:
 	void setVoltage1(ex volt) override {}
 	void setCurrent1(ex curr) override {}
 
-	virtual void stamp(matrix& G, matrix& I) const override;
+	virtual void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 };

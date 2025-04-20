@@ -26,7 +26,7 @@ public:
 	ex getResistance() const { return resistance; }
     void setResistance(const ex& res) { resistance = res; }
 
-	void stamp(matrix& G, matrix& I) const override;
+	void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 };
 
 // Ideal voltage source
@@ -44,7 +44,7 @@ public:
 	ex getVoltage() const { return voltage; }
 	void setVoltage(ex volt) { voltage = volt; }
 
-	void stamp(matrix& G, matrix& I) const override;
+	void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 
 };
 
@@ -60,7 +60,7 @@ public:
 	ex getCurrent() { return current; }
 	void setCurrent(ex curr) { current = curr; }
 
-	void stamp(matrix& G, matrix& I) const override;
+	void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 };
 
 
@@ -81,7 +81,7 @@ public:
 	ex getImpedance() const { return impedance; }
 	void setImpedance(const ex& imp) { impedance = imp; }
 
-	virtual void stamp(matrix& G, matrix& I) const override;
+	void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 };
 
 class Capacitor : public DynamicComponent
@@ -99,7 +99,7 @@ public:
 	void setCapacitance(ex& C) { capacitance = C; }
 
 	// AC stamping for MNA
-	void stamp(matrix& G, matrix& I) const override;
+	void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 };
 
 class Inductor : public DynamicComponent
@@ -116,5 +116,5 @@ public:
 	ex getInductance() { return inductance; }
 	void setInductance(ex& ind) { inductance = ind; }
 
-	void stamp(matrix& G, matrix& I) const override;
+	void stamp(matrix& G, matrix& I, AnalysisType analysis) const override;
 };
