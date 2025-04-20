@@ -31,11 +31,16 @@ void OperationalAmplifier::stamp(matrix& G, matrix& I) const {
     int in_p = getPrimaryInput()->getIndex(), in_n = getSecondaryInput()->getIndex();
     int out = getPrimaryOutput()->getIndex();
 
-    
-    G(out, in_p) += 1;
-    G(out, in_n) -= 1;
+    int row = G.rows();
+    G = resize_matrix(G, row + 1, row + 1);
+    I = resize_matrix(I, row + 1, 1);
+
+    G(row, in_p) += 1;
+    G(row, in_n) -= 1;
 
     // I_out = 0
+
+    G(out, row) = 1;
 }
 
 // Girator Stamping

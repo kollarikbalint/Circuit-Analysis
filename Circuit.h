@@ -19,6 +19,7 @@ public:
 
     void addComponent(std::shared_ptr<Component>);
     void addNode(std::shared_ptr<Node>);
+    void connect(std::shared_ptr<Component>, std::shared_ptr<Component>);
     
     void solve();
 };

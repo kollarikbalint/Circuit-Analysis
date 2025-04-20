@@ -10,7 +10,7 @@ class CircuitElement {
 public:
 	CircuitElement() = default;
 	virtual ~CircuitElement() = default;
-	virtual void stamp(matrix &G, matrix I) const = 0;
+	virtual void stamp(matrix &G, matrix& I) const = 0;
 };
 
 class Component : public CircuitElement

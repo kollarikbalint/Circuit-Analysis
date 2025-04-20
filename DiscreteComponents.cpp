@@ -37,7 +37,9 @@ matrix resize_matrix(const GiNaC::matrix& original, size_t new_rows, size_t new_
 // Resistor, Table B.2
 
 void Resistor::stamp(matrix& G, matrix& I) const {
-    int i = getInput()->getIndex(), j = getOutput()->getIndex();
+    int i_node = getInput()->getIndex(), j_node = getOutput()->getIndex();
+    int i = (i_node == 0) ? -1 : i_node;
+    int j = (j_node == 0) ? -1 : j_node;
 
     ex g = 1 / resistance; // Conductance
     G(i, i) += g;
