@@ -19,7 +19,7 @@ class Circuit
 {
     std::vector<std::shared_ptr<Component>> components;
     std::vector<std::shared_ptr<Node>> nodes;
-
+    AnalysisType analysisType = AnalysisType::DC;
 
 public:
     Circuit() = default;
@@ -27,6 +27,7 @@ public:
     void addComponent(std::shared_ptr<Component>);
     void addNode(std::shared_ptr<Node>);
     void connect(std::shared_ptr<Component>, std::shared_ptr<Component>);
+    void setAnalysisType(AnalysisType type) { analysisType = type; }
     
     void solve();
 };

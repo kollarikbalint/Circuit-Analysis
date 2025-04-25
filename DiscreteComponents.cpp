@@ -82,22 +82,55 @@ void CurrentSource::stamp(matrix& G, matrix& I, AnalysisType analysis) const {
 
 void Capacitor::stamp(matrix& G, matrix& I, AnalysisType analysis) const {
     int i = getInput()->getIndex(), j = getOutput()->getIndex();
-    ex Y = GiNaC::symbol("s") * capacitance; // Conductance 1 / Z = s * C where s = j * w is the Laplace variable
 
-    G(i, i) += Y;
-    G(j, j) += Y;
-    G(i, j) -= Y;
-    G(j, i) -= Y;
+    // DC: Open circuit, no stamping
+    if (analysis == AnalysisType::DC) {
+        return;
+    }
+
+    // AC: Lapalace domain Z = 1 / (jw * C)
+    else if (analysis == AnalysisType::AC) {
+        ex Y = s * capacitance; // Conductance in laplace domain
+        G(i, i) += Y;
+        G(j, j) += Y;
+        G(i, j) -= Y;
+        G(j, i) -= Y;
+    }
+
+    else if (analysis == AnalysisType::Transient) {
+        // TODO: Implement transient analysis for capacitor
+    }
 }
 
 // Inductor (Laplace Domain, Table B.4)
 
 void Inductor::stamp(matrix&G, matrix& I, AnalysisType analysis) const {
     int i = getInput()->getIndex(), j = getOutput()->getIndex();
-    ex Y = 1 / (GiNaC::symbol("s") * inductance); // Conductance 1 / Z = 1 / (s * L) where s = j * w is the Laplace variable
 
-    G(i, i) += Y;
-    G(j, j) += Y;
-    G(i, j) -= Y;
-    G(j, i) -= Y;
+    if (analysis == AnalysisType::DC) {
+        // Short circuit
+        int vs_row = G.rows();
+        G = resize_matrix(G, vs_row + 1, vs_row + 1);
+        I = resize_matrix(I, vs_row + 1, 1);
+
+        G(vs_row, i) += 1;
+        G(vs_row, j) -= 1;
+        G(i, vs_row) += 1;
+        G(j, vs_row) -= 1;
+        // I(vs_row, 0) = 0; no current flowing
+    }
+
+    if (analysis == AnalysisType::AC) {
+        // Laplace domain Z = jw * L
+        ex Y = 1 / (s * inductance); // Conductance 1 / Z = 1 / (s * L) where s = j * w is the Laplace variable
+
+        G(i, i) += Y;
+        G(j, j) += Y;
+        G(i, j) -= Y;
+        G(j, i) -= Y;
+    }
+
+    if (analysis == AnalysisType::Transient) {
+        // TODO: Implement transient analysis for inductor
+    }
 }

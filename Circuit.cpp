@@ -21,6 +21,16 @@ void Circuit::solve() {
     matrix I(nodes_count, 1);
 
     for (const auto& component : components) {
-        component->stamp(G, I);
+        component->stamp(G, I, analysisType); // Pass analysis type
     }
+
+    // Handle DC (real matrices) or AC (substitute s = jω)
+    if (analysisType == AnalysisType::AC) {
+        exmap sub_map;
+        sub_map[s] = GiNaC::I * w; // Use GiNaC's predefined imaginary unit
+        G = ex_to<matrix>(G.subs(sub_map));
+        I = ex_to<matrix>(I.subs(sub_map));
+    }
+
+    // TODO: Solve G*x = I using GiNaC's linear algebra tools
 }
